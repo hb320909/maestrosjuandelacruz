@@ -1,0 +1,7 @@
+{
+  "name": "residencia1",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
