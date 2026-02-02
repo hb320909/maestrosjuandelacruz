@@ -1,4 +1,4 @@
-package io.ionic.starter;
+package com.resi.portalresi;
 
 import com.getcapacitor.BridgeActivity;
 
