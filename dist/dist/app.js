@@ -1,9 +1,15 @@
+// --- Supabase setup ---
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = 'https://upznvkoiiiazvnuowhdr.supabase.co'
+const supabaseKey = 'sb_publishable_TaFJ0GGjMhmCGnGi4N4dyA_auGwFljE'
+const supabase = createClient(supabaseUrl, supabaseKey)
+
 // Data storage
-let students = [];
-let rooms = [];
-let absences = [];
-let reports = []; // 'partes' disciplinarios
-let homeworks = {}; // { weekStartISO: { estudio1: 'text', estudio2: 'text', ... } }
+students = students || [];
+absences = absences || [];
+reports = reports || [];
+homeworks = homeworks || {};
 let currentUser = '';
 let currentSection = 'dashboard';
 
@@ -148,62 +154,92 @@ function createConfetti() {
     }
 }
 
-// Load data from localStorage
-function loadData() {
-    const savedStudents = localStorage.getItem('students');
-    const savedAbsences = localStorage.getItem('absences');
-    const savedReports = localStorage.getItem('reports');
-    
-    if (savedStudents) {
-        students = JSON.parse(savedStudents);
-    }
-    if (savedAbsences) {
-        absences = JSON.parse(savedAbsences);
-    }
-    if (savedReports) {
-        reports = JSON.parse(savedReports);
-    }
-    
+/// --- Global variables ---
+let students = [];
+let absences = [];
+let reports = [];
+let homeworks = {}; // optional
+
+// --- Load data from Supabase ---
+async function loadData() {
+    // Fetch students
+    const { data: studentsData, error: studentsError } = await supabase
+        .from('students')
+        .select('*');
+
+    students = studentsError ? [] : studentsData;
+    if (studentsError) console.error('Error loading students:', studentsError);
+
+    // Fetch absences
+    const { data: absencesData, error: absencesError } = await supabase
+        .from('absences')
+        .select('*');
+
+    absences = absencesError ? [] : absencesData;
+    if (absencesError) console.error('Error loading absences:', absencesError);
+
+    // Fetch reports
+    const { data: reportsData, error: reportsError } = await supabase
+        .from('reports')
+        .select('*');
+
+    reports = reportsError ? [] : reportsData;
+    if (reportsError) console.error('Error loading reports:', reportsError);
+
+    // Initialize UI
     initializeRooms();
-    
-    // Reconstruct room assignments from student data
-    students.forEach(student => {
-        if (student.habitacion) {
-            const room = rooms.find(r => r.number === student.habitacion);
-            if (room && student.cama) {
-                room.beds[student.cama] = student.id;
-                room.occupied++;
-            } else if (room) {
-                // Si el estudiante no tiene asignada una cama específica, encontrar la primera vacía
-                const emptyBed = Object.keys(room.beds).find(bed => room.beds[bed] === null);
-                if (emptyBed) {
-                    student.cama = emptyBed;
-                    room.beds[emptyBed] = student.id;
-                    room.occupied++;
-                }
-            }
-        }
-    });
-    
     updateDashboard();
     updateStudentsTable();
     updateRoomsGrid();
     updateAbsencesTable();
     updateReportsTable();
     populateDropdowns();
-    // Load homeworks and render agenda for current week
-    loadHomeworks();
+    loadHomeworks(); // optional
     renderAgenda();
-    // Check for birthdays
     checkBirthdays();
-}
 
-// Save data to localStorage
-function saveData() {
+    // Optional: save fetched data to localStorage
     localStorage.setItem('students', JSON.stringify(students));
     localStorage.setItem('absences', JSON.stringify(absences));
     localStorage.setItem('reports', JSON.stringify(reports));
 }
+
+// --- Save functions ---
+async function saveStudent(student) {
+    const { error } = await supabase
+        .from('students')
+        .upsert(student, { onConflict: ['id'] });
+    if (error) console.error('Error saving student:', error);
+}
+
+async function saveAbsence(absence) {
+    const { error } = await supabase
+        .from('absences')
+        .upsert(absence, { onConflict: ['id'] });
+    if (error) console.error('Error saving absence:', error);
+}
+
+async function saveReport(report) {
+    const { error } = await supabase
+        .from('reports')
+        .upsert(report, { onConflict: ['id'] });
+    if (error) console.error('Error saving report:', error);
+}
+
+// --- Add new student example ---
+async function addNewStudent(student) {
+    students.push(student);
+    await saveStudent(student);
+    updateDashboard();
+    updateStudentsTable();
+}
+
+// --- Initialize app ---
+async function initApp() {
+    await loadData();
+}
+
+initApp();
 
 // Login functionality
 document.getElementById('loginForm').addEventListener('submit', function(e) {
