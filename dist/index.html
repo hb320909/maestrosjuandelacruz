@@ -29,6 +29,8 @@
         .confetti-piece { animation: confetti 3s ease-in forwards; }
     </style>
 </head>
+<script type="module" src="./main.js"></script>
+
 <body class="bg-gray-50">
     <!-- Login Screen -->
     <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-200">
@@ -741,7 +743,7 @@
         </main>
     </div>
 
-    <script src="app.js"></script>
+    <script type="module" src="/app.js"></script>
     <script>
         // Logo loading handler - try to load logo.png or logo.svg, if fails show SVG fallback
         const logoImg = document.getElementById('mainLogo');
@@ -767,30 +769,28 @@
         }
     </script>
     <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_DOMAIN",
-  databaseURL: "TU_DATABASE_URL",
-  projectId: "TU_PROJECT_ID"
-};
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBCrLxhUtzUHRa2mxmtIlqhOF_2sa0jcqA",
+    authDomain: "resialbox-70e68.firebaseapp.com",
+    databaseURL: "https://resialbox-70e68-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "resialbox-70e68",
+    storageBucket: "resialbox-70e68.firebasestorage.app",
+    messagingSenderId: "184050536758",
+    appId: "1:184050536758:web:05ad4d5ca40b63f63a2397",
+    measurementId: "G-WDWDD2E62D"
+  };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// ESCUCHAR CAMBIOS EN TIEMPO REAL
-onValue(ref(db, "estado"), (snapshot) => {
-  document.getElementById("estado").innerText = snapshot.val();
-});
-
-// CAMBIAR ESTADO
-window.cambiar = (valor) => {
-  set(ref(db, "estado"), valor);
-};
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
 </script>
-    <button onclick="cambiar('ON')">ON</button>
-<button onclick="cambiar('OFF')">OFF</button>
 </body>
 </html>
