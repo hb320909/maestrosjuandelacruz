@@ -6,7 +6,8 @@
     <title>Portal de Residencia Escolar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         body { font-family: 'Inter', sans-serif; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
@@ -27,9 +28,11 @@
         .birthday-modal-content { animation: birthdayPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .confetti-piece { animation: confetti 3s ease-in forwards; }
     </style>
-  <script type="module" crossorigin src="/assets/index-CizlQyas.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BQGEOX__.css">
-</head>
+  <script type="module" src="/main.js"></script>
+  <script type="module" src="/app.js"></script>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
 <body class="bg-gray-50">
     <!-- Login Screen -->
     <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-200">
@@ -741,7 +744,8 @@
             </section>
         </main>
     </div>
-
+
+
     <script>
         // Logo loading handler - try to load logo.png or logo.svg, if fails show SVG fallback
         const logoImg = document.getElementById('mainLogo');
@@ -765,7 +769,8 @@
                 }
             }, 2000);
         }
-    </script>
+    </script>
+
 </script>
 </body>
 </html>
