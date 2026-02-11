@@ -1,5 +1,5 @@
 // --- Supabase setup ---
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://upznvkoiiiazvnuowhdr.supabase.co'
 const supabaseKey = 'sb_publishable_TaFJ0GGjMhmCGnGi4N4dyA_auGwFljE'
@@ -19,8 +19,6 @@ let students = [];
 let absences = [];
 let reports = [];
 let homeworks = {};
-let rooms = [];
-let seguimientos = {};
 let currentUser = '';
 let currentSection = 'dashboard';
 
@@ -213,26 +211,11 @@ async function loadData() {
 }
 
 // --- Save functions ---
-function saveData() {
-    localStorage.setItem('students', JSON.stringify(students));
-    localStorage.setItem('absences', JSON.stringify(absences));
-    localStorage.setItem('reports', JSON.stringify(reports));
-    localStorage.setItem('rooms', JSON.stringify(rooms));
-    localStorage.setItem('homeworks', JSON.stringify(homeworks));
-    if (seguimientos) {
-        localStorage.setItem('seguimientos', JSON.stringify(seguimientos));
-    }
-}
-
 async function saveStudent(student) {
     const { error } = await supabase
         .from('students')
         .upsert(student, { onConflict: ['id'] });
-    if (error) {
-        console.error('Error saving student:', error);
-        return false;
-    }
-    return true;
+    if (error) console.error('Error saving student:', error);
 }
 
 async function saveAbsence(absence) {
@@ -258,15 +241,14 @@ async function addNewStudent(student) {
 }
 
 // --- Initialize app ---
-// async function initApp() {
-//     await loadData();
-// }
+async function initApp() {
+    await loadData();
+}
 
-// initApp(); // Moved to DOMContentLoaded
+initApp();
 
-// Login functionality (duplicate - moved to DOMContentLoaded)
-/*
-// document.getElementById('loginForm').addEventListener('submit', function(e) {
+// Login functionality
+document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const username = document.getElementById('username').value;
@@ -312,7 +294,6 @@ document.getElementById('mobileNav').addEventListener('change', function() {
 
 // When selecting a student in the assign form, refresh available rooms
 document.getElementById('roomStudent')?.addEventListener('change', populateDropdowns);
-*/
 
 function showSection(sectionName) {
     document.querySelectorAll('.content-section').forEach(section => {
@@ -323,7 +304,6 @@ function showSection(sectionName) {
 }
 
 // Add student functionality
-/*
 document.getElementById('addStudentForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -356,7 +336,6 @@ document.getElementById('addStudentForm').addEventListener('submit', function(e)
     addActivity(`Nuevo alumno añadido: ${student.nombre}`);
 });
 
-*/
 // Update dashboard
 function updateDashboard() {
     document.getElementById('totalAlumnos').textContent = students.length;
@@ -1507,7 +1486,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add student functionality
     const addStudentForm = document.getElementById('addStudentForm');
     if (addStudentForm) {
-        addStudentForm.addEventListener('submit', async function(e) {
+        addStudentForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const student = {
                 id: Date.now(),
@@ -1523,12 +1502,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const age = calculateAge(student.fechaNacimiento);
             student.ageGroup = (age !== null && age >= 18) ? 'mayor' : 'menor';
             students.push(student);
-            const saved = await saveStudent(student);
-            if (!saved) {
-                students = students.filter(s => s.id !== student.id);
-                alert('No se pudo guardar el alumno. IntÃ©ntalo de nuevo.');
-                return;
-            }
             saveData();
             updateDashboard();
             updateStudentsTable();
