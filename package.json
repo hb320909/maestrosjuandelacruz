@@ -4,8 +4,8 @@
   "description": "Portal web para gestión de residencia escolar",
   "main": "index.html",
   "scripts": {
-    "start": "python -m http.server 3000",
-    "dev": "python -m http.server 3000"
+    "start": "cd dist && npx vite --port 3000 --host",
+    "dev": "cd dist && npx vite --port 3000 --host"
   },
   "keywords": [
     "residencia",
@@ -25,11 +25,12 @@
     "@capacitor/core": "^8.0.2",
     "@capacitor/haptics": "8.0.0",
     "@capacitor/keyboard": "8.0.0",
-    "@capacitor/status-bar": "8.0.0"
+    "@capacitor/status-bar": "8.0.0",
+    "@supabase/supabase-js": "^2.75.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.0.2",
-    "vite": "7.3.1"
+    "vite": "^4.0.0"
   },
   "type": "commonjs"
 }
