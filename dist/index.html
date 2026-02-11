@@ -28,7 +28,6 @@
         .birthday-modal-content { animation: birthdayPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .confetti-piece { animation: confetti 3s ease-in forwards; }
     </style>
-  <script type="module" src="/main.js"></script>
   <script type="module" src="/app.js"></script>
   <link rel="stylesheet" href="/styles.css">
 </head>
@@ -133,7 +132,7 @@
                                     <circle cx="115" cy="177" r="1.5"/>
                                 </g>
                             </svg>
-                            <img id="mainLogo" src="logo.png" alt="MJC Logo" class="h-16 w-16 object-cover rounded-full" style="display:none;">
+                            <img id="mainLogo" src="logo.svg" alt="MJC Logo" class="h-16 w-16 object-cover rounded-full" style="display:none;">
                         </div>
                         <div>
                             <h1 class="text-2xl font-bold text-white">Residencia Escolar MJC</h1>
@@ -747,7 +746,7 @@
 
 
     <script>
-        // Logo loading handler - try to load logo.png or logo.svg, if fails show SVG fallback
+        // Logo loading handler - try to load logo.svg, if fails show SVG fallback
         const logoImg = document.getElementById('mainLogo');
         const fallbackSvg = document.getElementById('fallbackLogo');
         
@@ -758,8 +757,8 @@
                 fallbackSvg.style.display = 'block';
             };
             
-            // Try loading the image (PNG first, then SVG as fallback in HTML)
-            logoImg.src = 'logo.png';
+            // Try loading the image
+            logoImg.src = 'logo.svg';
             
             // Check if image loaded successfully (optional: set timeout fallback)
             setTimeout(() => {
@@ -770,7 +769,5 @@
             }, 2000);
         }
     </script>
-
-</script>
 </body>
 </html>

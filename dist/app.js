@@ -1,15 +1,26 @@
 // --- Supabase setup ---
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
 const supabaseUrl = 'https://upznvkoiiiazvnuowhdr.supabase.co'
 const supabaseKey = 'sb_publishable_TaFJ0GGjMhmCGnGi4N4dyA_auGwFljE'
 const supabase = createClient(supabaseUrl, supabaseKey)
 
+// Helper function to ensure DOM is ready
+function onDOMReady(callback) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callback);
+    } else {
+        callback();
+    }
+}
+
 // Data storage
-students = students || [];
-absences = absences || [];
-reports = reports || [];
-homeworks = homeworks || {};
+let students = [];
+let absences = [];
+let reports = [];
+let homeworks = {};
+let rooms = [];
+let seguimientos = {};
 let currentUser = '';
 let currentSection = 'dashboard';
 
@@ -155,10 +166,7 @@ function createConfetti() {
 }
 
 /// --- Global variables ---
-let students = [];
-let absences = [];
-let reports = [];
-let homeworks = {}; // optional
+// Note: students, absences, reports, homeworks are already declared at the top of the file
 
 // --- Load data from Supabase ---
 async function loadData() {
@@ -205,11 +213,26 @@ async function loadData() {
 }
 
 // --- Save functions ---
+function saveData() {
+    localStorage.setItem('students', JSON.stringify(students));
+    localStorage.setItem('absences', JSON.stringify(absences));
+    localStorage.setItem('reports', JSON.stringify(reports));
+    localStorage.setItem('rooms', JSON.stringify(rooms));
+    localStorage.setItem('homeworks', JSON.stringify(homeworks));
+    if (seguimientos) {
+        localStorage.setItem('seguimientos', JSON.stringify(seguimientos));
+    }
+}
+
 async function saveStudent(student) {
     const { error } = await supabase
         .from('students')
         .upsert(student, { onConflict: ['id'] });
-    if (error) console.error('Error saving student:', error);
+    if (error) {
+        console.error('Error saving student:', error);
+        return false;
+    }
+    return true;
 }
 
 async function saveAbsence(absence) {
@@ -235,14 +258,15 @@ async function addNewStudent(student) {
 }
 
 // --- Initialize app ---
-async function initApp() {
-    await loadData();
-}
+// async function initApp() {
+//     await loadData();
+// }
 
-initApp();
+// initApp(); // Moved to DOMContentLoaded
 
-// Login functionality
-document.getElementById('loginForm').addEventListener('submit', function(e) {
+// Login functionality (duplicate - moved to DOMContentLoaded)
+/*
+// document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const username = document.getElementById('username').value;
@@ -288,6 +312,7 @@ document.getElementById('mobileNav').addEventListener('change', function() {
 
 // When selecting a student in the assign form, refresh available rooms
 document.getElementById('roomStudent')?.addEventListener('change', populateDropdowns);
+*/
 
 function showSection(sectionName) {
     document.querySelectorAll('.content-section').forEach(section => {
@@ -298,6 +323,7 @@ function showSection(sectionName) {
 }
 
 // Add student functionality
+/*
 document.getElementById('addStudentForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -330,6 +356,7 @@ document.getElementById('addStudentForm').addEventListener('submit', function(e)
     addActivity(`Nuevo alumno añadido: ${student.nombre}`);
 });
 
+*/
 // Update dashboard
 function updateDashboard() {
     document.getElementById('totalAlumnos').textContent = students.length;
@@ -1406,13 +1433,239 @@ function clearHomework(estudioId) {
 
 
 // Set today's date as default
-document.getElementById('absenceDate').valueAsDate = new Date();
-if (document.getElementById('reportDate')) {
-    document.getElementById('reportDate').valueAsDate = new Date();
-}
+onDOMReady(() => {
+    const absenceDate = document.getElementById('absenceDate');
+    if (absenceDate) absenceDate.valueAsDate = new Date();
+    const reportDate = document.getElementById('reportDate');
+    if (reportDate) reportDate.valueAsDate = new Date();
+});
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     // Load data on page load
     loadData();
+
+    // Login functionality
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if (users[username] && users[username] === password) {
+                currentUser = username;
+                document.getElementById('currentUser').textContent = `Bienvenido, ${username}`;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                loadData();
+                showSection('dashboard');
+                errorDiv.classList.add('hidden');
+            } else {
+                errorDiv.textContent = 'Usuario o contraseña incorrectos';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+    }
+
+    // Logout functionality
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            currentUser = '';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginError').classList.add('hidden');
+        });
+    }
+
+    // Navigation functionality
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const section = this.getAttribute('data-section');
+            showSection(section);
+        });
+    });
+
+    const mobileNav = document.getElementById('mobileNav');
+    if (mobileNav) {
+        mobileNav.addEventListener('change', function() {
+            showSection(this.value);
+        });
+    }
+
+    // When selecting a student in the assign form, refresh available rooms
+    const roomStudent = document.getElementById('roomStudent');
+    if (roomStudent) {
+        roomStudent.addEventListener('change', populateDropdowns);
+    }
+
+    // Add student functionality
+    const addStudentForm = document.getElementById('addStudentForm');
+    if (addStudentForm) {
+        addStudentForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const student = {
+                id: Date.now(),
+                nombre: document.getElementById('studentNombre').value,
+                fechaNacimiento: document.getElementById('studentNacimiento').value,
+                mayor16: !!document.getElementById('studentMayor16').checked,
+                gender: document.getElementById('studentGenero').value,
+                curso: document.getElementById('studentCurso').value,
+                telefono1: document.getElementById('studentTelefono1').value,
+                telefono2: document.getElementById('studentTelefono2').value,
+                habitacion: null
+            };
+            const age = calculateAge(student.fechaNacimiento);
+            student.ageGroup = (age !== null && age >= 18) ? 'mayor' : 'menor';
+            students.push(student);
+            const saved = await saveStudent(student);
+            if (!saved) {
+                students = students.filter(s => s.id !== student.id);
+                alert('No se pudo guardar el alumno. IntÃ©ntalo de nuevo.');
+                return;
+            }
+            saveData();
+            updateDashboard();
+            updateStudentsTable();
+            populateDropdowns();
+            this.reset();
+            addActivity(`Nuevo alumno añadido: ${student.nombre}`);
+        });
+    }
+
+    // Assign room functionality
+    const assignRoomForm = document.getElementById('assignRoomForm');
+    if (assignRoomForm) {
+        assignRoomForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const studentId = parseInt(document.getElementById('roomStudent').value);
+            const roomNumber = document.getElementById('roomNumber').value;
+            const selectedBed = document.getElementById('roomBed') ? document.getElementById('roomBed').value : '';
+            const student = students.find(s => s.id === studentId);
+            const room = rooms.find(r => r.number === roomNumber);
+            if (!student || !room) return;
+            const studentGender = student.gender;
+            if (room.gender && room.gender !== 'mixta' && studentGender !== 'otro' && room.gender !== studentGender) {
+                alert('La habitación seleccionada no es compatible con el género del alumno.');
+                return;
+            }
+            let emptyBed = null;
+            if (selectedBed) {
+                if (room.beds[selectedBed] !== null) {
+                    alert(`La cama ${selectedBed} ya está ocupada en esta habitación.`);
+                    return;
+                }
+                emptyBed = selectedBed;
+            } else {
+                emptyBed = Object.keys(room.beds).find(bed => room.beds[bed] === null);
+            }
+            if (!emptyBed) {
+                alert('La habitación está llena. No hay camas disponibles.');
+                return;
+            }
+            if (student.habitacion) {
+                const previousRoom = rooms.find(r => r.number === student.habitacion);
+                if (previousRoom && student.cama) {
+                    previousRoom.beds[student.cama] = null;
+                    previousRoom.occupied--;
+                }
+            }
+            student.habitacion = roomNumber;
+            student.cama = emptyBed;
+            room.beds[emptyBed] = studentId;
+            room.occupied++;
+            saveData();
+            updateDashboard();
+            updateStudentsTable();
+            updateRoomsGrid();
+            populateDropdowns();
+            this.reset();
+            addActivity(`Asignada habitación ${roomNumber} cama ${emptyBed} a ${student.nombre}`);
+        });
+    }
+
+    // Add absence functionality
+    const addAbsenceForm = document.getElementById('addAbsenceForm');
+    if (addAbsenceForm) {
+        addAbsenceForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const absence = {
+                id: Date.now(),
+                studentId: parseInt(document.getElementById('absenceStudent').value),
+                fecha: document.getElementById('absenceDate').value,
+                descripcion: document.getElementById('absenceDescription').value
+            };
+            absences.push(absence);
+            saveData();
+            updateDashboard();
+            updateAbsencesTable();
+            this.reset();
+            addActivity(`Nueva falta registrada para el alumno ${students.find(s => s.id === absence.studentId)?.nombre}`);
+        });
+    }
+
+    // Add report functionality
+    const addReportForm = document.getElementById('addReportForm');
+    if (addReportForm) {
+        addReportForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const report = {
+                id: Date.now(),
+                studentId: parseInt(document.getElementById('reportStudent').value),
+                fecha: document.getElementById('reportDate').value,
+                descripcion: document.getElementById('reportDescription').value
+            };
+            reports.push(report);
+            saveData();
+            updateDashboard();
+            updateReportsTable();
+            this.reset();
+            addActivity(`Nuevo informe registrado para el alumno ${students.find(s => s.id === report.studentId)?.nombre}`);
+        });
+    }
+
+    // Add seguimiento functionality
+    const addSeguimientoForm = document.getElementById('addSeguimientoForm');
+    if (addSeguimientoForm) {
+        addSeguimientoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const seguimiento = {
+                id: Date.now(),
+                studentId: parseInt(document.getElementById('seguimientoStudent').value),
+                fecha: document.getElementById('seguimientoDate').value,
+                descripcion: document.getElementById('seguimientoDescription').value
+            };
+            if (!seguimientos[seguimiento.studentId]) {
+                seguimientos[seguimiento.studentId] = [];
+            }
+            seguimientos[seguimiento.studentId].push(seguimiento);
+            saveData();
+            updateSeguimientoTable(seguimiento.studentId);
+            this.reset();
+            addActivity(`Nuevo seguimiento registrado para el alumno ${students.find(s => s.id === seguimiento.studentId)?.nombre}`);
+        });
+    }
+
+    // Filter absences
+    const filterStudent = document.getElementById('filterStudent');
+    if (filterStudent) {
+        filterStudent.addEventListener('change', updateAbsencesTable);
+    }
+    const filterDate = document.getElementById('filterDate');
+    if (filterDate) {
+        filterDate.addEventListener('change', updateAbsencesTable);
+    }
+    const clearFilters = document.getElementById('clearFilters');
+    if (clearFilters) {
+        clearFilters.addEventListener('click', function() {
+            document.getElementById('filterStudent').value = '';
+            document.getElementById('filterDate').value = '';
+            updateAbsencesTable();
+        });
+    }
 });
